@@ -31,13 +31,38 @@ model = DeepSpeakerModel()
 def index():
     return "Hello"
 
+@app.route('/train', methods=["GET"])
+def train():
+    try:
+        file = request.files["file"]
+        user = request.json['users']
+        
+        mfcc = sample_from_mfcc(read_mfcc(file, SAMPLE_RATE), NUM_FRAMES)
+        
+                # Predict the speaker using the model
+        prediction = model.m.predict(np.expand_dims(mfcc, axis=0))
+
+                # Compute the cosine similarity with each reference speaker
+        similarities = [batch_cosine_similarity(prediction, model.m.predict(np.expand_dims(file)))]
+
+        predicted_speaker_index = np.argmax(similarities)
+        predicted_speaker = [predicted_speaker_index]
+
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return f"An Error occured: {e}"
+    
+        
+
 @app.route('/verify', methods=['POST', 'GET'])
 def verify():
     try:
+        
+        file = request.files["file"]
         voice_ref = db.collection('recordings')
         user = request.json['users']
         voice = voice_ref.document(user)
-
+        """
         mfcc = sample_from_mfcc(read_mfcc(voice, SAMPLE_RATE), NUM_FRAMES)
         
                 # Predict the speaker using the model
@@ -46,12 +71,11 @@ def verify():
                 # Compute the cosine similarity with each reference speaker
         similarities = [batch_cosine_similarity(prediction, model.m.predict(np.expand_dims(voice)))]
 
-                # Find the index of the reference speaker with the highest similarity
         predicted_speaker_index = np.argmax(similarities)
 
                 # Get the predicted speaker
         predicted_speaker = [predicted_speaker_index]
-
+        """
         prediction = model.m.predict(np.expand_dims(sample_from_mfcc(read_mfcc(voice, SAMPLE_RATE)), axis=0))
 
                 # Compute the cosine similarity with reference speakers trained on 'speakerX1' and 'speakerX2'
