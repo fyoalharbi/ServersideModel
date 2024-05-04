@@ -72,7 +72,10 @@ def train(UID):
         return jsonify({predicted_speaker: True}), 200
     except Exception as e:
         return f"An Error occured: {e}"
-    
+
+def gcp_entry(request):
+     return 'OK'
+            
         
 """"
 @app.route('/verify', methods=['POST', 'GET'])
